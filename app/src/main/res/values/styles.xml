@@ -1,0 +1,10 @@
+<resources>
+    <!-- Define custom styles here, not themes -->
+    <!-- Example: -->
+    <!--
+    <style name="CustomButtonStyle">
+        <item name="android:background">@color/button_background</item>
+        <item name="android:textColor">@color/button_text</item>
+    </style>
+    -->
+</resources>
