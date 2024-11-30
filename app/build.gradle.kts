@@ -39,6 +39,7 @@ android {
 dependencies {
     implementation(libs.glide)
     annotationProcessor(libs.compiler)
+    implementation(libs.ucrop)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -47,5 +48,6 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 
 }
