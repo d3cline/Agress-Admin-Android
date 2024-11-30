@@ -1,6 +1,10 @@
 // Product.kt
 package net.d3cline.agressadmin
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Product(
     val id: Int,
     val name: String,
@@ -10,4 +14,4 @@ data class Product(
     val image: String,
     val created_at: String,
     val updated_at: String
-)
+) : Parcelable

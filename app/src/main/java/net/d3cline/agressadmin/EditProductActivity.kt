@@ -1,7 +1,11 @@
 package net.d3cline.agressadmin
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Base64
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -15,7 +19,7 @@ import com.bumptech.glide.Glide
 class EditProductActivity : AppCompatActivity() {
 
     private lateinit var settingsManager: SettingsManager
-    private var productId: Int = 0
+    private var productId: Int = 1
 
     // UI elements
     private lateinit var nameEditText: EditText
@@ -32,7 +36,7 @@ class EditProductActivity : AppCompatActivity() {
         settingsManager = SettingsManager(this)
         setContentView(R.layout.activity_edit_product)
 
-        productId = intent.getIntExtra("product_id", 0)
+        productId = intent.getIntExtra("product_id", 1)
 
         // Initialize UI elements
         nameEditText = findViewById(R.id.nameEditText)
@@ -64,13 +68,11 @@ class EditProductActivity : AppCompatActivity() {
             try {
                 // Retrieve base URL and API key
                 val baseUrl = settingsManager.baseUrl
-                val apiKey = settingsManager.apiKey
 
                 // Fetch product details using GET request
                 val url = URL("$baseUrl/product/$productId")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                //connection.setRequestProperty("Authorization", "Bearer $apiKey")
                 connection.connect()
 
                 val responseCode = connection.responseCode
@@ -80,20 +82,30 @@ class EditProductActivity : AppCompatActivity() {
 
                 val response = connection.inputStream.bufferedReader().use { it.readText() }
                 val product = JSONObject(response)
+                println("AYYYYYYYYYYYYYYYYYYYYYYYYYYYY")
+                println(product)
 
-                runOnUiThread {
-                    // Populate the UI with product details
-                    nameEditText.setText(product.getString("name"))
-                    priceEditText.setText(product.getDouble("price").toString())
-                    currencyEditText.setText(product.getString("currency"))
-                    descriptionEditText.setText(product.getString("description"))
-                    imageEditText.setText(product.getString("image"))
+// Parsing product details from JSON
+                val name = product.getString("name")
+                val price = product.getDouble("price").toString()
+                val currency = product.getString("currency")
+                val description = product.getString("description")
+                val imageBase64 = product.getString("image").split(",")[1] // Strips "data:image/webp;base64," prefix
 
-                    // Load image into ImageView using Glide
-                    Glide.with(this)
-                        .load(product.getString("image"))
-                        .into(productImageView)
+// Decode base64 image
+                val imageBytes = android.util.Base64.decode(imageBase64, android.util.Base64.DEFAULT)
+                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+// Update UI on the main thread
+                Handler(Looper.getMainLooper()).post {
+                    nameEditText.setText(name)
+                    priceEditText.setText(price)
+                    currencyEditText.setText(currency)
+                    descriptionEditText.setText(description)
+                    productImageView.setImageBitmap(bitmap)
                 }
+
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {

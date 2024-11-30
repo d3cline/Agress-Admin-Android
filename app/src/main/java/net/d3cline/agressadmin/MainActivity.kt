@@ -6,11 +6,15 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import android.widget.Toolbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import android.graphics.*
+import android.graphics.drawable.ColorDrawable
+import androidx.core.content.ContextCompat
+import android.content.Context
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +36,13 @@ class MainActivity : AppCompatActivity() {
         productsRecyclerView.layoutManager = LinearLayoutManager(this)
 
         // Set up swipe actions
+        // Set up swipe actions with visual effects
+        val background = ColorDrawable()
+        val deleteIcon = ContextCompat.getDrawable(this, R.drawable.ic_delete)!!
+        val editIcon = ContextCompat.getDrawable(this, R.drawable.ic_edit)!!
+        val intrinsicWidth = deleteIcon.intrinsicWidth
+        val intrinsicHeight = deleteIcon.intrinsicHeight
+
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
             0,
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
@@ -41,7 +52,6 @@ class MainActivity : AppCompatActivity() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                // Not implementing drag & drop
                 return false
             }
 
@@ -56,6 +66,64 @@ class MainActivity : AppCompatActivity() {
                     editProduct(product)
                     productsAdapter.notifyItemChanged(position) // Reset swipe
                 }
+            }
+
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                val itemView = viewHolder.itemView
+                val iconMargin = (itemView.height - intrinsicHeight) / 2
+                val iconTop = itemView.top + (itemView.height - intrinsicHeight) / 2
+                val iconBottom = iconTop + intrinsicHeight
+
+                if (dX > 0) {
+                    // Swiping to the right - Edit
+                    background.color = Color.parseColor("#4CAF50") // Green
+                    background.setBounds(
+                        itemView.left,
+                        itemView.top,
+                        itemView.left + dX.toInt(),
+                        itemView.bottom
+                    )
+                    background.draw(c)
+
+                    editIcon.setBounds(
+                        itemView.left + iconMargin,
+                        iconTop,
+                        itemView.left + iconMargin + intrinsicWidth,
+                        iconBottom
+                    )
+                    editIcon.draw(c)
+                } else if (dX < 0) {
+                    // Swiping to the left - Delete
+                    background.color = Color.parseColor("#F44336") // Red
+                    background.setBounds(
+                        itemView.right + dX.toInt(),
+                        itemView.top,
+                        itemView.right,
+                        itemView.bottom
+                    )
+                    background.draw(c)
+
+                    deleteIcon.setBounds(
+                        itemView.right - iconMargin - intrinsicWidth,
+                        iconTop,
+                        itemView.right - iconMargin,
+                        iconBottom
+                    )
+                    deleteIcon.draw(c)
+                } else {
+                    background.setBounds(0, 0, 0, 0)
+                    background.draw(c)
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
             }
         }
 
@@ -115,11 +183,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun editProduct(product: Product) {
-        // Start EditProductActivity with the product ID
         val intent = Intent(this, EditProductActivity::class.java)
-        intent.putExtra("product_id", product.id)
+        intent.putExtra("product_id", product.id) // Pass only the ID
         startActivity(intent)
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
