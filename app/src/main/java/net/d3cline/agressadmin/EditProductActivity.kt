@@ -44,10 +44,20 @@ class EditProductActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+
         settingsManager = SettingsManager(this)
         setContentView(R.layout.activity_edit_product)
 
-        productId = intent.getIntExtra("product_id", 1)
+        productId = intent.getIntExtra("product_id", -1)
+
+        if (productId == -1) {
+            // New product mode - do not call loadProductDetails()
+            // Fields remain blank for a new product
+        } else {
+            loadProductDetails() // Existing product mode
+        }
 
         // Initialize UI elements
         nameEditText = findViewById(R.id.nameEditText)
@@ -60,7 +70,7 @@ class EditProductActivity : AppCompatActivity() {
         cancelButton = findViewById(R.id.cancelButton)
 
         // Load product details
-        loadProductDetails()
+        //loadProductDetails()
 
         pickImageButton.setOnClickListener {
             pickImage()
@@ -155,44 +165,44 @@ class EditProductActivity : AppCompatActivity() {
     }
 
     private fun saveProduct() {
-        val updatedProduct = JSONObject().apply {
-            put("name", nameEditText.text.toString())
-            put("price", priceEditText.text.toString().toDoubleOrNull() ?: 0.0)
-            put("currency", currencyEditText.text.toString())
-            put("description", descriptionEditText.text.toString())
-            put("image", base64Image) // Use the cropped Base64 image here
-        }
+        val name = nameEditText.text.toString()
+        val price = priceEditText.text.toString().toDoubleOrNull() ?: 0.0
+        val currency = currencyEditText.text.toString()
+        val description = descriptionEditText.text.toString()
+        val image = base64Image
+
+        val product = Product(
+            id = productId,
+            name = name,
+            price = price,
+            currency = currency,
+            description = description,
+            image = image,
+            created_at = "",
+            updated_at = ""
+        )
 
         Thread {
             try {
-                val baseUrl = settingsManager.baseUrl
-                val apiKey = settingsManager.apiKey
-                val url = URL("$baseUrl/product/$productId")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "PATCH"
-                connection.setRequestProperty("Authorization", "Bearer $apiKey")
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-
-                val outputStream = connection.outputStream
-                outputStream.write(updatedProduct.toString().toByteArray())
-                outputStream.flush()
-                outputStream.close()
-
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
+                val apiClient = ApiClient(this)
+                if (productId == -1) {
+                    // New product mode
+                    apiClient.createProduct(product)
                     runOnUiThread {
-                        Toast.makeText(this, "Product updated successfully", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(this, "Product created successfully", Toast.LENGTH_SHORT).show()
                         val intent = Intent(this, MainActivity::class.java)
                         startActivity(intent)
                         finish()
                     }
                 } else {
-                    val errorStream = connection.errorStream
-                    val errorResponse =
-                        errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
-                    throw Exception("Failed to update product: $responseCode $errorResponse")
+                    // Existing product mode
+                    apiClient.updateProduct(product)
+                    runOnUiThread {
+                        Toast.makeText(this, "Product updated successfully", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -202,6 +212,7 @@ class EditProductActivity : AppCompatActivity() {
             }
         }.start()
     }
+
 
     companion object {
         private const val IMAGE_PICK_CODE = 1001

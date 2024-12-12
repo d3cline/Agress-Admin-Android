@@ -137,6 +137,18 @@ class MainActivity : AppCompatActivity() {
         val toolbar: androidx.appcompat.widget.Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        // Find the FloatingActionButton
+        val fabNewProduct: com.google.android.material.floatingactionbutton.FloatingActionButton = findViewById(R.id.fabNewProduct)
+
+        // Set an OnClickListener to open EditProductActivity in "new product" mode
+        fabNewProduct.setOnClickListener {
+            val intent = Intent(this, EditProductActivity::class.java)
+            intent.putExtra("product_id", -1) // Using -1 to indicate a new product
+            startActivity(intent)
+        }
+
+
+
     }
 
     private fun fetchProducts() {
@@ -187,7 +199,6 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("product_id", product.id) // Pass only the ID
         startActivity(intent)
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)

@@ -114,5 +114,36 @@ class ApiClient(context: Context) {
         }
     }
 
+    fun createProduct(product: Product) {
+        val url = URL("$baseUrl/product")
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.setRequestProperty("Authorization", "Bearer $apiKey")
+        connection.setRequestProperty("Content-Type", "application/json")
+        connection.doOutput = true
+
+        val productJson = JSONObject().apply {
+            put("name", product.name)
+            put("price", product.price)
+            put("currency", product.currency)
+            put("description", product.description)
+            put("image", product.image)
+        }
+
+        val outputStream = connection.outputStream
+        outputStream.write(productJson.toString().toByteArray())
+        outputStream.flush()
+        outputStream.close()
+
+        val responseCode = connection.responseCode
+        if (responseCode != HttpURLConnection.HTTP_CREATED) {
+            val errorStream = connection.errorStream
+            val errorResponse = errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
+            throw Exception("Failed to create product: $responseCode $errorResponse")
+        }
+    }
+
+
+
     // Implement other methods like processCheckout and getOrderStatus similarly.
 }
