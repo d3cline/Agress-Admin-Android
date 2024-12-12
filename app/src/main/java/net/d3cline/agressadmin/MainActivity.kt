@@ -182,17 +182,21 @@ class MainActivity : AppCompatActivity() {
                     productsList.removeAt(position)
                     productsAdapter.notifyItemRemoved(position)
                     Toast.makeText(this, "Product deleted", Toast.LENGTH_SHORT).show()
+
+                    // Fetch the latest products from the server after deletion
+                    fetchProducts()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    productsAdapter.notifyItemChanged(position) // Reset swipe
+                    productsAdapter.notifyItemChanged(position) // Reset swipe if failed
                     Toast.makeText(this, "Failed to delete product: ${e.message}", Toast.LENGTH_LONG)
                         .show()
                 }
             }
         }.start()
     }
+
 
     private fun editProduct(product: Product) {
         val intent = Intent(this, EditProductActivity::class.java)

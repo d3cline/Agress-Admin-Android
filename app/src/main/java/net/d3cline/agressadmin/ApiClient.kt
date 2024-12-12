@@ -81,9 +81,10 @@ class ApiClient(context: Context) {
         connection.connect()
 
         val responseCode = connection.responseCode
-        if (responseCode != HttpURLConnection.HTTP_NO_CONTENT) {
+        if (responseCode != HttpURLConnection.HTTP_NO_CONTENT && responseCode != HttpURLConnection.HTTP_OK) {
             throw Exception("Failed to delete product: $responseCode")
         }
+
     }
 
     fun updateProduct(product: Product) {
@@ -136,11 +137,12 @@ class ApiClient(context: Context) {
         outputStream.close()
 
         val responseCode = connection.responseCode
-        if (responseCode != HttpURLConnection.HTTP_CREATED) {
+        if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_CREATED) {
             val errorStream = connection.errorStream
             val errorResponse = errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
             throw Exception("Failed to create product: $responseCode $errorResponse")
         }
+
     }
 
 
