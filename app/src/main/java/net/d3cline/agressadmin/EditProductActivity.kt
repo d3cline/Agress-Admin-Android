@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -129,10 +130,23 @@ class EditProductActivity : AppCompatActivity() {
                 val price = product.getDouble("price").toString()
                 val currency = product.getString("currency")
                 val description = product.getString("description")
-                val imageBase64 = product.getString("image").split(",")[1]
+
+                val imageField = product.getString("image")
+                Log.d("EditProductActivity", "Raw image field from server: $imageField")
+
+                // If the server returns something like "data:image/webp;base64,xxxxxx"
+                val parts = imageField.split(",")
+                val prefix = if (parts.size > 1) parts[0] + "," else ""
+                val imageBase64 = if (parts.size > 1) parts[1] else parts[0]
+
+                Log.d("EditProductActivity", "Base64 image portion: $imageBase64")
 
                 val imageBytes = Base64.decode(imageBase64, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+                // Set base64Image so that if the user doesn't pick a new image, we still have it.
+                // Reconstruct with prefix or ensure the prefix is what the server expects.
+                base64Image = prefix + imageBase64
 
                 Handler(Looper.getMainLooper()).post {
                     nameEditText.setText(name)
@@ -144,13 +158,13 @@ class EditProductActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    Toast.makeText(this, "Failed to load product: ${e.message}", Toast.LENGTH_LONG)
-                        .show()
+                    Toast.makeText(this, "Failed to load product: ${e.message}", Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
         }.start()
     }
+
 
     private fun pickImage() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
