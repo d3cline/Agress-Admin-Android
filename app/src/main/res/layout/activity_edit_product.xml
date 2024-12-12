@@ -9,6 +9,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- Add this ProgressBar somewhere in your layout, e.g., centered over content -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_centerInParent="true" />
+
+
+
         <EditText
             android:id="@+id/nameEditText"
             android:hint="Product Name"

@@ -10,9 +10,11 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
 import android.util.Base64
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.yalantis.ucrop.UCrop
@@ -42,6 +44,9 @@ class EditProductActivity : AppCompatActivity() {
 
     private var base64Image: String = "" // For storing the image in Base64
 
+    private lateinit var progressBar: ProgressBar
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -69,6 +74,9 @@ class EditProductActivity : AppCompatActivity() {
         saveButton = findViewById(R.id.saveButton)
         cancelButton = findViewById(R.id.cancelButton)
 
+        progressBar = findViewById(R.id.progressBar)
+
+
         // Load product details
         //loadProductDetails()
 
@@ -85,6 +93,18 @@ class EditProductActivity : AppCompatActivity() {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
+        }
+    }
+
+    private fun showLoadingIndicator(show: Boolean) {
+        if (show) {
+            progressBar.visibility = View.VISIBLE
+            saveButton.isEnabled = false
+            cancelButton.isEnabled = false
+        } else {
+            progressBar.visibility = View.GONE
+            saveButton.isEnabled = true
+            cancelButton.isEnabled = true
         }
     }
 
@@ -182,6 +202,8 @@ class EditProductActivity : AppCompatActivity() {
             updated_at = ""
         )
 
+        showLoadingIndicator(true)
+
         Thread {
             try {
                 val apiClient = ApiClient(this)
@@ -208,6 +230,11 @@ class EditProductActivity : AppCompatActivity() {
                 e.printStackTrace()
                 runOnUiThread {
                     Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                runOnUiThread {
+                    // Hide spinner, re-enable buttons
+                    showLoadingIndicator(false)
                 }
             }
         }.start()
